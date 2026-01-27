@@ -15,8 +15,8 @@ except OSError:
 
 # --- DATABASE: Skills to look for ---
 ROLE_SKILLS = {
-    "Frontend Developer": ["React", "JavaScript", "TypeScript", "HTML", "CSS", "Tailwind", "Redux", "Vite", "Git", "Figma", "Next.js"],
-    "Backend Developer": ["Python", "Java", "Node.js", "Django", "Flask", "Docker", "SQL", "PostgreSQL", "MongoDB", "AWS", "API"],
+    "Frontend Developer": ["React", "JavaScript", "TypeScript", "HTML", "CSS", "Tailwind", "Redux", "Vite", "Git", "Figma", "Next.js", "Angular JS"],
+    "Backend Developer": ["C","C++","Python", "Java", "Node.js", "Django", "Flask", "Docker", "SQL", "PostgreSQL", "MongoDB", "AWS", "API"],
     "Data Scientist": ["Python", "SQL", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch", "Matplotlib", "Statistics", "Jupyter", "Machine Learning"],
     "AI Engineer": ["Python", "PyTorch", "TensorFlow", "Deep Learning", "NLP", "Transformers", "Computer Vision", "GANs", "OpenCV", "LangChain", "LLM", "Bert"],
     "DevOps Engineer": ["AWS", "Azure", "Docker", "Kubernetes", "Jenkins", "CI/CD", "Linux", "Terraform", "Git", "Bash"],
@@ -82,6 +82,7 @@ class SkillAnalyzer:
             "Scikit-Learn": ["Python", "Pandas", "NumPy", "Matplotlib", "Statistics"],
             "Machine Learning": ["Python", "Pandas", "NumPy", "Scikit-Learn"],
             "Deep Learning": ["Python", "TensorFlow", "PyTorch", "NumPy"],
+            "Python": ["Pandas", "NumPy","Matplotlib"],
             
             # AI Engineer Logic (UPDATED)
             "PyTorch": ["Python", "Deep Learning", "NumPy"],
