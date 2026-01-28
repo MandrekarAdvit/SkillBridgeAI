@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Dropzone from './components/Dropzone';
 import ResultDashboard from './components/ResultDashboard';
+import ChatBot from './components/ChatBot'; // <--- 1. Import ChatBot
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-slate-50">
+    <div className="min-h-screen pb-20 bg-slate-50 relative"> {/* Added relative for positioning */}
       {/* Navbar */}
       <nav className="bg-white border-b border-slate-200 px-6 py-4 mb-12 shadow-sm">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
@@ -67,7 +68,6 @@ function App() {
                 <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">
                   Target Role
                 </label>
-                {/* 👇 UPDATED DROPDOWN MENU 👇 */}
                 <select 
                   className="w-full bg-slate-50 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl p-4 text-lg font-medium outline-none transition-all cursor-pointer hover:bg-slate-100"
                   value={role}
@@ -89,6 +89,16 @@ function App() {
           <ResultDashboard results={results} onReset={() => setResults(null)} />
         )}
       </main>
+
+      {/* 2. CHATBOT INTEGRATION */}
+      {/* Only show the chatbot when results exist (i.e., resume is analyzed) */}
+      {results && (
+        <ChatBot 
+            resumeText={results.raw_text} 
+            targetRole={results.role} 
+        />
+      )}
+
     </div>
   );
 }

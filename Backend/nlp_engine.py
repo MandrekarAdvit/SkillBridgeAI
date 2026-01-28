@@ -183,10 +183,12 @@ class SkillAnalyzer:
             link = RESOURCES.get(skill, f"https://www.youtube.com/results?search_query=learn+{skill}+tutorial")
             recommendations.append({"name": skill, "link": link})
         
+        # ... existing code ...
         return {
             "role": target_role,
             "score": int(final_score),
             "found_skills": matched_skills,
             "missing_skills": recommendations,
-            "ai_insight": pivot_msg
+            "ai_insight": pivot_msg,
+            "raw_text": text  # <--- ADD THIS LINE HERE!
         }
