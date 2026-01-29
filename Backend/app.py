@@ -2,22 +2,28 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from nlp_engine import SkillAnalyzer
 import os
-import requests  # Using standard requests for everything now
+import requests
+from dotenv import load_dotenv # <--- IMPORTS DOTENV
+
+# 1. Load the secret keys from the .env file
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 analyzer = SkillAnalyzer()
 
-# --- CONFIGURATION ---
-# 1. Job Search Key
-RAPID_API_KEY = "1ce074e645msh391a641d555aa10p10ffcejsn440586942bef"
+# 2. FETCH KEYS SECURELY (Do not paste actual keys here!)
+RAPID_API_KEY = os.getenv("RAPID_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# 2. Gemini API Key (PASTE YOUR NEW KEY HERE)
-GEMINI_API_KEY = "AIzaSyCmGj9H3cN20GLFBRBtafcXE2lHPksT5J0" 
+# Safety Check
+if not GEMINI_API_KEY:
+    print("❌ ERROR: Gemini Key not found! Make sure you created the .env file.")
+else:
+    print("✅ Gemini Key loaded successfully.")
 
-# --- HELPER: Direct Call to Gemini (Using the SAFE 'gemini-flash-latest' alias) ---
+# --- HELPER: Call Gemini ---
 def call_gemini(prompt):
-    # We switched to 'gemini-flash-latest' which is guaranteed to have Free Tier quota
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
     headers = {'Content-Type': 'application/json'}
     payload = {
@@ -28,13 +34,11 @@ def call_gemini(prompt):
     try:
         response = requests.post(url, headers=headers, json=payload)
         
-        # Check for Errors
         if response.status_code != 200:
             return f"Error from Google: {response.text}"
             
         data = response.json()
         
-        # Safety Check
         if "candidates" not in data or not data["candidates"]:
              return "I couldn't think of a response. Please try asking differently! 😊"
 
@@ -93,7 +97,7 @@ def find_jobs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- 3. CHATBOT (Using Direct API Call) ---
+# --- 3. CHATBOT ---
 @app.route('/chat', methods=['POST'])
 def chat_with_ai():
     data = request.json
@@ -101,7 +105,7 @@ def chat_with_ai():
     resume_context = data.get('context') or "No resume provided."
     role = data.get('role', 'Developer')
 
-    # --- UPDATED PROMPT LOGIC ---
+    # --- PROMPT LOGIC ---
     full_prompt = f"""
     You are a friendly, encouraging Career Coach.
     User Role: {role}
@@ -115,8 +119,7 @@ def chat_with_ai():
     3. Keep other answers to 3-4 sentences max.
     4. Be polite and use emojis like 🚀, 🗺️, 💡.
     """
-
-    # Call the helper function defined above
+    
     ai_reply = call_gemini(full_prompt)
 
     return jsonify({"reply": ai_reply})

@@ -1,61 +1,65 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const ChatBot = ({ resumeText, targetRole }) => {
   const [isOpen, setIsOpen] = useState(false);
+  // Initial Message
   const [messages, setMessages] = useState([
-    { sender: 'ai', text: `Hi there! 👋 I'm your AI Career Coach. I've analyzed your resume for the ${targetRole} role. How can I help you today?` }
+    { 
+      sender: 'ai', 
+      text: `Hi there! 👋 I'm your AI Career Coach. I've analyzed your resume for the **${targetRole}** role. How can I help you today?` 
+    }
   ]);
   const [loading, setLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(true); 
   const messagesEndRef = useRef(null);
 
+  // Auto-scroll to bottom when messages change
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(scrollToBottom, [messages, loading, showOptions]);
 
-  // --- UPDATED OPTIONS MENU ---
+  // --- OPTIONS MENU ---
   const options = [
-    { label: "📊 Resume Analysis", prompt: "Please analyze my resume and give me constructive feedback." },
-    { label: "🔀 Career Pivot Advice", prompt: "I want to pivot to this role. What steps should I take?" },
-    { label: "🗺️ Generate Skill Roadmap", action: "ask_roadmap" }, // Special Flag
-    { label: "⌨️ Ask a specific question...", isInputTrigger: true } // input trigger
+    { label: "Resume Analysis", prompt: "Please analyze my resume and give me constructive feedback." },
+    { label: "Career Pivot Advice", prompt: "I want to pivot to this role. What steps should I take?" },
+    { label: "Generate Skill Roadmap", action: "ask_roadmap" }, 
+    { label: "Ask a specific question...", isInputTrigger: true } 
   ];
 
-  // --- UNIFIED HANDLER ---
+  // --- HANDLER ---
   const handleOptionClick = async (input) => {
-    // 1. Determine if input is a Menu Object or Typed Text
+    // 1. Determine input type
     const isOptionObj = typeof input === 'object';
     const textToSend = isOptionObj ? input.prompt : input;
 
-    // --- CASE A: User clicked "Ask a specific question" ---
+    // CASE A: Trigger Input Box
     if (isOptionObj && input.isInputTrigger) {
-        setShowOptions(false); // Just show input box
+        setShowOptions(false); 
         return;
     }
 
-    // --- CASE B: Interactive Roadmap Flow ---
+    // CASE B: Roadmap Interaction Flow
     if (isOptionObj && input.action === 'ask_roadmap') {
         setShowOptions(false);
-        // Add User Message
         setMessages(prev => [...prev, { sender: 'user', text: "I want to generate a skill roadmap." }]);
         setLoading(true);
 
-        // Fake AI Delay for realism
         setTimeout(() => {
             setLoading(false);
             setMessages(prev => [...prev, { 
                 sender: 'ai', 
-                text: "That sounds exciting! 🚀 Which specific skill do you want to learn? (e.g., Python, System Design, Leadership)" 
+                text: "That sounds exciting! 🚀 **Which specific skill** do you want to learn? (e.g., Python, System Design, Leadership)" 
             }]);
-            // Logic ends here. User sees input box and types their skill.
         }, 800);
         return; 
     }
 
-    // --- CASE C: Standard Request (Resume Analysis, Pivot, or Typed Text) ---
+    // CASE C: Standard Request
     setShowOptions(false);
     setMessages(prev => [...prev, { sender: 'user', text: textToSend }]);
     setLoading(true);
@@ -67,9 +71,23 @@ const ChatBot = ({ resumeText, targetRole }) => {
         role: targetRole || "General"
       });
       
-      setMessages(prev => [...prev, { sender: 'ai', text: res.data.reply }]);
+      // --- LOGIC: Handle JSON Roadmap vs Plain Text ---
+      let aiResponseText = "";
+
+      // Check if backend returned structured JSON (for Roadmap)
+      if (res.data.type === 'json' && Array.isArray(res.data.data)) {
+          aiResponseText = "### 🗺️ Your 4-Week Roadmap:\n\n";
+          res.data.data.forEach(week => {
+              aiResponseText += `**${week.week}: ${week.topic}**\n* ${week.details}\n\n`;
+          });
+      } else {
+          // Standard Text Response
+          aiResponseText = res.data.reply || "I couldn't generate a response.";
+      }
+
+      setMessages(prev => [...prev, { sender: 'ai', text: aiResponseText }]);
       
-      // Show Options Menu Again Loop
+      // Show Options again after a delay
       setTimeout(() => {
         setMessages(prev => [...prev, { sender: 'ai', text: "Is there anything else I can help you with? 😊" }]);
         setShowOptions(true);
@@ -100,7 +118,7 @@ const ChatBot = ({ resumeText, targetRole }) => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white font-bold flex justify-between items-center shadow-md">
             <div className="flex items-center gap-2">
-                <span className="text-xl">🤖</span>
+                <span className="text-xl"></span>
                 <div>
                     <h3 className="text-sm font-bold">SkillBridge Coach</h3>
                     <p className="text-xs text-blue-100 font-normal">Online • AI Assistant</p>
@@ -118,7 +136,25 @@ const ChatBot = ({ resumeText, targetRole }) => {
                     ? 'bg-blue-600 text-white rounded-br-none' 
                     : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none'
                 }`}>
-                  {msg.text}
+                  {/* --- PARSING LOGIC HERE --- */}
+                  <div className="markdown-content">
+                    <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            // Style lists to look neat
+                            ul: ({node, ...props}) => <ul className="list-disc pl-4 space-y-1 mt-1" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal pl-4 space-y-1 mt-1" {...props} />,
+                            // Make links blue and distinct
+                            a: ({node, ...props}) => <a className="text-blue-200 hover:text-white underline font-bold" target="_blank" rel="noopener noreferrer" {...props} />,
+                            // Bold text
+                            strong: ({node, ...props}) => <span className="font-bold" {...props} />,
+                            // Headers
+                            h3: ({node, ...props}) => <h3 className="font-bold text-base mt-2 mb-1 border-b pb-1" {...props} />
+                        }}
+                    >
+                        {msg.text}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}
@@ -144,7 +180,6 @@ const ChatBot = ({ resumeText, targetRole }) => {
                     {options.map((opt, i) => (
                         <button 
                             key={i} 
-                            // IMPORTANT: Pass the whole object 'opt' here
                             onClick={() => handleOptionClick(opt)}
                             className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-xl text-sm font-medium text-slate-700 hover:text-blue-700 transition-all active:scale-95 flex items-center justify-between group"
                         >
@@ -161,13 +196,13 @@ const ChatBot = ({ resumeText, targetRole }) => {
                 </div>
             ) : (
                 <div className="flex gap-2">
-                     <input 
-                        className="flex-1 bg-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      <input 
+                        className="flex-1 bg-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
                         placeholder="Type here..."
                         autoFocus
                         onKeyPress={(e) => {
                             if (e.key === 'Enter') {
-                                handleOptionClick(e.target.value); // Sends string
+                                handleOptionClick(e.target.value); 
                                 e.target.value = '';
                             }
                         }}
@@ -189,7 +224,6 @@ const ChatBot = ({ resumeText, targetRole }) => {
         ) : (
             <>
                 <span className="text-3xl">💬</span>
-                {/* Notification Dot */}
                 <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></span>
             </>
         )}
