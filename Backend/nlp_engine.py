@@ -15,8 +15,8 @@ except OSError:
 
 # --- DATABASE: Skills to look for ---
 ROLE_SKILLS = {
-    "Frontend Developer": ["React", "JavaScript", "TypeScript", "HTML", "CSS", "Tailwind", "Redux", "Vite", "Git", "Figma", "Next.js"],
-    "Backend Developer": ["Python", "Java", "Node.js", "Django", "Flask", "Docker", "SQL", "PostgreSQL", "MongoDB", "AWS", "API"],
+    "Frontend Developer": ["React", "JavaScript", "TypeScript", "HTML", "CSS", "Tailwind", "Redux", "Vite", "Git", "Figma", "Next.js", "Angular JS"],
+    "Backend Developer": ["C","C++","Python", "Java", "Node.js", "Django", "Flask", "Docker", "SQL", "PostgreSQL", "MongoDB", "AWS", "API"],
     "Data Scientist": ["Python", "SQL", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch", "Matplotlib", "Statistics", "Jupyter", "Machine Learning"],
     "AI Engineer": ["Python", "PyTorch", "TensorFlow", "Deep Learning", "NLP", "Transformers", "Computer Vision", "GANs", "OpenCV", "LangChain", "LLM", "Bert"],
     "DevOps Engineer": ["AWS", "Azure", "Docker", "Kubernetes", "Jenkins", "CI/CD", "Linux", "Terraform", "Git", "Bash"],
@@ -82,6 +82,7 @@ class SkillAnalyzer:
             "Scikit-Learn": ["Python", "Pandas", "NumPy", "Matplotlib", "Statistics"],
             "Machine Learning": ["Python", "Pandas", "NumPy", "Scikit-Learn"],
             "Deep Learning": ["Python", "TensorFlow", "PyTorch", "NumPy"],
+            "Python": ["Pandas", "NumPy","Matplotlib"],
             
             # AI Engineer Logic (UPDATED)
             "PyTorch": ["Python", "Deep Learning", "NumPy"],
@@ -182,10 +183,12 @@ class SkillAnalyzer:
             link = RESOURCES.get(skill, f"https://www.youtube.com/results?search_query=learn+{skill}+tutorial")
             recommendations.append({"name": skill, "link": link})
         
+        # ... existing code ...
         return {
             "role": target_role,
             "score": int(final_score),
             "found_skills": matched_skills,
             "missing_skills": recommendations,
-            "ai_insight": pivot_msg
+            "ai_insight": pivot_msg,
+            "raw_text": text  # <--- ADD THIS LINE HERE!
         }
